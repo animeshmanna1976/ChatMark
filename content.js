@@ -40,10 +40,6 @@ function showToolBar(rect, range, selText) {
     hideToolbar();
   });
 
-  // yellowBtn.addEventListener("click", () => {
-  //   applyHighlight(range, selText, "chatmark-yellow");
-  //   hideToolbar();
-  // });
 
   toolbar.appendChild(yellowBtn);
   document.body.appendChild(toolbar);
