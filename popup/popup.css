@@ -1,0 +1,6 @@
+body { font-family: Arial, Helvetica, sans-serif; width:320px; margin:0; padding:10px; }
+.container { display:flex; flex-direction:column; gap:8px; }
+#highlights { list-style:none; padding:0; margin:0; max-height:320px; overflow:auto; }
+.high-item { display:flex; justify-content:space-between; gap:8px; padding:6px 8px; border-bottom:1px solid #eee; }
+.high-text { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.btn { background:#e74c3c; color:white; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; }
