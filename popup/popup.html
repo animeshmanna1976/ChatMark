@@ -8,10 +8,20 @@
 </head>
 <body>
   <div class="container">
-    <h3>Highlights</h3>
-    <div id="status">Loading...</div>
+    <div class="header">
+      <h3>
+        <span class="logo-icon">✨</span>
+        ChatMark
+      </h3>
+      <span class="badge" id="count-badge">0</span>
+    </div>
+    <div id="status" class="status">Loading...</div>
     <ul id="highlights"></ul>
-    <div id="empty" style="display:none">No highlights for this conversation.</div>
+    <div id="empty" class="empty-state" style="display:none">
+      <div class="empty-icon">📝</div>
+      <div class="empty-text">No highlights yet</div>
+      <div class="empty-hint">Select text on the page and click a color to highlight</div>
+    </div>
   </div>
   <script src="popup.js"></script>
 </body>

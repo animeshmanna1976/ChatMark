@@ -1,6 +1,167 @@
-body { font-family: Arial, Helvetica, sans-serif; width:320px; margin:0; padding:10px; }
-.container { display:flex; flex-direction:column; gap:8px; }
-#highlights { list-style:none; padding:0; margin:0; max-height:320px; overflow:auto; }
-.high-item { display:flex; justify-content:space-between; gap:8px; padding:6px 8px; border-bottom:1px solid #eee; }
-.high-text { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.btn { background:#e74c3c; color:white; border:none; padding:6px 8px; border-radius:6px; cursor:pointer; }
+/* ─────────────────────────────────────────────────────────
+   ChatMark — Popup Styles
+   ───────────────────────────────────────────────────────── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  width: 340px;
+  background: linear-gradient(160deg, #0f0f1a 0%, #1a1a2e 40%, #16213e 100%);
+  color: #e0e0e0;
+  padding: 0;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
+}
+
+/* ── Header ───────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.logo-icon {
+  font-size: 18px;
+}
+
+.badge {
+  background: linear-gradient(135deg, #ffe066 0%, #ffcc02 100%);
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ── Status ───────────────────────────────────────────── */
+.status {
+  padding: 12px 18px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+}
+
+/* ── Highlights List ──────────────────────────────────── */
+#highlights {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 360px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+#highlights::-webkit-scrollbar {
+  width: 4px;
+}
+#highlights::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+}
+
+.high-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+}
+
+.high-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Color dot */
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.color-dot.chatmark-yellow { background: #ffe066; }
+.color-dot.chatmark-green  { background: #69db7c; }
+.color-dot.chatmark-blue   { background: #74c0fc; }
+.color-dot.chatmark-pink   { background: #ffa8c5; }
+
+.high-text {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.btn-delete {
+  background: none;
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  color: #ff6b6b;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.btn-delete:hover {
+  background: rgba(255, 80, 80, 0.15);
+  border-color: rgba(255, 80, 80, 0.5);
+  transform: scale(1.05);
+}
+
+/* ── Empty State ──────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 18px 28px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+}
+
+.empty-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+  line-height: 1.5;
+  max-width: 220px;
+}
