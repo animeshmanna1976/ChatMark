@@ -67,6 +67,94 @@
 
 span.chatmark-highlight {
   animation: chatmark-highlight-pop 0.4s ease-out;
-  cursor: default;
+  cursor: pointer;
   position: relative;
+}
+
+/* ── Flash animation for scrolling ───────────────────────── */
+@keyframes chatmark-flash-anim {
+  0%   { outline: 2px solid rgba(255, 255, 255, 0); outline-offset: 2px; }
+  20%  { outline: 2px solid rgba(51, 154, 240, 1); outline-offset: 4px; background-color: rgba(51, 154, 240, 0.4); }
+  100% { outline: 2px solid rgba(51, 154, 240, 0); outline-offset: 2px; }
+}
+
+.chatmark-flash {
+  animation: chatmark-flash-anim 1.5s ease-out !important;
+}
+
+/* ── Comment Icon & Tooltip ───────────────────────────── */
+.chatmark-comment-icon {
+  position: absolute;
+  top: -14px;
+  right: -10px;
+  width: 20px;
+  height: 20px;
+  background: #2a2a22; 
+  color: #fff;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.chatmark-comment-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chatmark-comment-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  background: #202124;
+  color: #e8eaed;
+  padding: 10px 14px;
+  border-radius: 8px;
+  min-width: 150px;
+  max-width: 280px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,0.08);
+  font-family: system-ui, -apple-system, sans-serif;
+  z-index: 100;
+}
+
+/* Tooltip arrow */
+.chatmark-comment-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: #202124 transparent transparent transparent;
+}
+
+.chatmark-comment-icon:hover .chatmark-comment-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.chatmark-tooltip-date {
+  font-size: 11px;
+  color: #9aa0a6;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.chatmark-tooltip-text {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }

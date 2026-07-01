@@ -97,6 +97,34 @@
         background: linear-gradient(135deg, #ff6b6b 0%, #fa5252 100%);
         color: #fff;
       }
+      .chatmark-btn-comment {
+        background: linear-gradient(135deg, #74c0fc 0%, #339af0 100%);
+        color: #fff;
+      }
+      .chatmark-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+      .chatmark-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 13px;
+        outline: none;
+        min-width: 180px;
+      }
+      .chatmark-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .chatmark-btn-save {
+        background: linear-gradient(135deg, #69db7c 0%, #40c057 100%);
+        color: #1a1a1a;
+      }
       .chatmark-label {
         color: rgba(255,255,255,0.5);
         font-size: 11px;
@@ -124,7 +152,7 @@
       const id = highlightSpan.dataset.id;
       if (id) {
         const rect = highlightSpan.getBoundingClientRect();
-        showRemoveToolBar(rect, id);
+        showEditToolBar(rect, id);
       }
     }
   }
@@ -226,7 +254,7 @@
     shadowRoot.appendChild(toolbar);
   }
 
-  function showRemoveToolBar(rect, id) {
+  function showEditToolBar(rect, id) {
     hideToolBar();
     ensureShadowHost();
 
@@ -248,26 +276,79 @@
       top = 12;
     }
 
-    const toolbarEstWidth = 110;
+    const toolbarEstWidth = 220; // wider for two buttons
     left = rect.left + rect.width / 2 - toolbarEstWidth / 2;
     left = Math.max(12, Math.min(left, viewportW - toolbarEstWidth - 12));
 
     toolbar.style.top = `${Math.round(top)}px`;
     toolbar.style.left = `${Math.round(left)}px`;
 
-    const btn = document.createElement("button");
-    btn.className = "chatmark-btn chatmark-btn-remove";
-    btn.title = "Remove Highlight";
-    btn.textContent = "Remove";
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      removeHighlightById(id);
-      hideToolBar();
-    });
+    // Fetch existing comment (if any) first
+    const key = storageKeyForConversation();
+    chrome.storage.local.get([key], (result) => {
+      const existing = result[key] || [];
+      const highlightData = existing.find(h => h.id === id);
+      const currentComment = highlightData ? (highlightData.comment || "") : "";
 
-    toolbar.appendChild(btn);
-    shadowRoot.appendChild(toolbar);
+      const btnRemove = document.createElement("button");
+      btnRemove.className = "chatmark-btn chatmark-btn-remove";
+      btnRemove.title = "Remove Highlight";
+      btnRemove.textContent = "Remove";
+      btnRemove.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        removeHighlightById(id);
+        hideToolBar();
+      });
+
+      const btnComment = document.createElement("button");
+      btnComment.className = "chatmark-btn chatmark-btn-comment";
+      btnComment.title = "Add/Edit Comment";
+      btnComment.textContent = "💬 Comment";
+      btnComment.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        // Replace buttons with input UI
+        toolbar.innerHTML = "";
+        
+        const wrapper = document.createElement("div");
+        wrapper.className = "chatmark-input-wrapper";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "chatmark-input";
+        input.placeholder = "Add a comment...";
+        input.value = currentComment;
+
+        const btnSave = document.createElement("button");
+        btnSave.className = "chatmark-btn chatmark-btn-save";
+        btnSave.textContent = "Save";
+
+        const saveHandler = (se) => {
+          se.stopPropagation();
+          se.preventDefault();
+          updateHighlightComment(id, input.value.trim());
+          hideToolBar();
+        };
+
+        btnSave.addEventListener("click", saveHandler);
+        input.addEventListener("keydown", (ke) => {
+          if (ke.key === "Enter") saveHandler(ke);
+          if (ke.key === "Escape") hideToolBar();
+        });
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(btnSave);
+        toolbar.appendChild(wrapper);
+
+        // Focus input after rendering
+        setTimeout(() => input.focus(), 50);
+      });
+
+      toolbar.appendChild(btnRemove);
+      toolbar.appendChild(btnComment);
+      shadowRoot.appendChild(toolbar);
+    });
   }
 
   function hideToolBar() {
@@ -342,7 +423,7 @@
     return nodes;
   }
 
-  function highlightTextNodes(textNodes, colorClass, id) {
+  function highlightTextNodes(textNodes, colorClass, id, comment = "") {
     const wrappedSpans = [];
 
     // Process in reverse order so offsets remain valid
@@ -387,7 +468,55 @@
       }
     }
 
+    // Add comment icon to the last span (which is wrappedSpans[0] because we process in reverse)
+    if (comment && wrappedSpans.length > 0) {
+      updateCommentIconForHighlight(id, comment, null); // Will use current date if null
+    }
+
     return wrappedSpans;
+  }
+
+  function updateCommentIconForHighlight(id, comment, dateStr) {
+    const existingIcons = document.querySelectorAll(`span.chatmark-comment-icon[data-id="${id}"]`);
+    existingIcons.forEach(icon => icon.remove());
+
+    if (!comment) return;
+
+    // Remove any leftover title attributes just in case
+    const spans = document.querySelectorAll(`span.chatmark-highlight[data-id="${id}"]`);
+    spans.forEach(span => span.removeAttribute("title"));
+
+    if (spans.length > 0) {
+      // Find the last span in document order. Since they are queried from DOM,
+      // spans[spans.length - 1] is the last piece of the highlight.
+      const lastSpan = spans[spans.length - 1];
+
+      const iconSpan = document.createElement("span");
+      iconSpan.className = "chatmark-comment-icon";
+      iconSpan.dataset.id = id;
+      
+      const displayDate = dateStr || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      iconSpan.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <div class="chatmark-comment-tooltip">
+          <div class="chatmark-tooltip-date">${displayDate}</div>
+          <div class="chatmark-tooltip-text">${comment}</div>
+        </div>
+      `;
+
+      // Allow clicking the icon to edit
+      iconSpan.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const rect = lastSpan.getBoundingClientRect();
+        showEditToolBar(rect, id);
+      });
+
+      lastSpan.appendChild(iconSpan);
+    }
   }
 
   // Apply Highlight 
@@ -450,8 +579,26 @@
     chrome.storage.local.get([key], (result) => {
       if (chrome.runtime.lastError) return;
       const existing = result[key] || [];
-      existing.push({ id, text, colorClass });
+      existing.push({ id, text, colorClass, comment: "" });
       chrome.storage.local.set({ [key]: existing });
+    });
+  }
+
+  function updateHighlightComment(id, comment) {
+    if (!isContextValid()) return;
+    const key = storageKeyForConversation();
+    chrome.storage.local.get([key], (result) => {
+      if (chrome.runtime.lastError) return;
+      const existing = result[key] || [];
+      const item = existing.find(h => h.id === id);
+      if (item) {
+        item.comment = comment;
+        item.dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+        chrome.storage.local.set({ [key]: existing });
+        
+        // Update DOM icon
+        updateCommentIconForHighlight(id, comment, item.dateStr);
+      }
     });
   }
 
@@ -638,7 +785,7 @@
       // Process highlights one at a time. After each successful restore,
       // the DOM is modified (text nodes get split by inserted <span>s),
       // so we must do a FRESH DOM walk for each subsequent highlight.
-      for (const { id, text, colorClass } of highlights) {
+      for (const { id, text, colorClass, comment, dateStr } of highlights) {
         if (!text) continue;
         // Skip if already restored
         if (restoredIds.has(id)) continue;
@@ -654,7 +801,10 @@
         const matchedNodes = findTextAcrossNodes(container, text);
 
         if (matchedNodes && matchedNodes.length > 0) {
-          const spans = highlightTextNodes(matchedNodes, colorClass, id);
+          const spans = highlightTextNodes(matchedNodes, colorClass, id, comment);
+          if (comment) {
+            updateCommentIconForHighlight(id, comment, dateStr);
+          }
           if (spans.length > 0) {
             restoredIds.add(id);
           }
@@ -787,6 +937,19 @@
       }
       if (msg && msg.action === "REMOVE_HIGHLIGHT" && msg.id) {
         removeHighlightById(msg.id, () => sendResponse({ ok: true }));
+        return true;
+      }
+      if (msg && msg.action === "SCROLL_TO_HIGHLIGHT" && msg.id) {
+        const span = document.querySelector(`span.chatmark-highlight[data-id="${msg.id}"]`);
+        if (span) {
+          span.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Add a brief flash animation
+          span.classList.add("chatmark-flash");
+          setTimeout(() => span.classList.remove("chatmark-flash"), 1500);
+          sendResponse({ ok: true });
+        } else {
+          sendResponse({ ok: false });
+        }
         return true;
       }
     });

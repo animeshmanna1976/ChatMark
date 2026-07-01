@@ -30,24 +30,47 @@ document.addEventListener("DOMContentLoaded", () => {
       highs.forEach((h) => {
         const li = document.createElement("li");
         li.className = "high-item";
+        
+        // Click to scroll
+        li.addEventListener("click", (e) => {
+          // Prevent scroll if clicking delete button
+          if (e.target.closest(".btn-delete")) return;
+          chrome.tabs.sendMessage(tab.id, { action: "SCROLL_TO_HIGHLIGHT", id: h.id });
+        });
 
         // Color dot
         const dot = document.createElement("span");
         dot.className = `color-dot ${h.colorClass || "chatmark-yellow"}`;
         li.appendChild(dot);
 
+        // Content Wrapper
+        const contentWrapper = document.createElement("div");
+        contentWrapper.className = "high-content";
+
         // Text
         const t = document.createElement("div");
         t.className = "high-text";
         t.textContent = h.text;
         t.title = h.text; // full text on hover
-        li.appendChild(t);
+        contentWrapper.appendChild(t);
+
+        // Comment (if any)
+        if (h.comment) {
+          const c = document.createElement("div");
+          c.className = "high-comment";
+          c.textContent = `💬 ${h.comment}`;
+          c.title = h.comment;
+          contentWrapper.appendChild(c);
+        }
+
+        li.appendChild(contentWrapper);
 
         // Delete button
         const del = document.createElement("button");
         del.className = "btn-delete";
         del.textContent = "Remove";
-        del.addEventListener("click", () => {
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();
           chrome.tabs.sendMessage(tab.id, { action: "REMOVE_HIGHLIGHT", id: h.id }, (r) => {
             if (r && r.ok) {
               li.style.opacity = "0";
